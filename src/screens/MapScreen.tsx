@@ -1,9 +1,6 @@
 import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
+import { Map } from "../components/Map";
 import { useLocation } from "../hooks/useLocation";
-
-const LATITUDE_DELTA = 0.05;
-const LONGITUDE_DELTA = 0.05;
 
 export function MapScreen() {
   const location = useLocation();
@@ -28,36 +25,15 @@ export function MapScreen() {
     );
   }
 
-  const { latitude, longitude } = location;
-
   return (
     <View style={styles.container}>
-      <MapView
-        style={styles.map}
-        provider={PROVIDER_DEFAULT}
-        initialRegion={{
-          latitude,
-          longitude,
-          latitudeDelta: LATITUDE_DELTA,
-          longitudeDelta: LONGITUDE_DELTA,
-        }}
-        showsUserLocation
-        showsMyLocationButton
-      >
-        <Marker
-          coordinate={{ latitude, longitude }}
-          title="You are here"
-        />
-      </MapView>
+      <Map latitude={location.latitude} longitude={location.longitude} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  map: {
     flex: 1,
   },
   centered: {
