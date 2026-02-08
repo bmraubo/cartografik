@@ -8,12 +8,19 @@ import { buildStyle } from "../utils/styleBuilder";
 import { DOT_PATTERN_BASE64, DOT_PATTERN_SIZE } from "../utils/dotPattern";
 import defaultConfig from "../config/mapStyle";
 
+export interface ViewportState {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
 interface MapProps {
   latitude: number;
   longitude: number;
+  onViewportChange?: (viewport: ViewportState) => void;
 }
 
-export function Map({ latitude, longitude }: MapProps) {
+export function Map({ latitude, longitude, onViewportChange }: MapProps) {
   const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
 
   useEffect(() => {
@@ -56,6 +63,13 @@ export function Map({ latitude, longitude }: MapProps) {
         dragRotate={false}
         pitchWithRotate={false}
         onLoad={onLoad}
+        onMoveEnd={(evt) => {
+          onViewportChange?.({
+            latitude: evt.viewState.latitude,
+            longitude: evt.viewState.longitude,
+            zoom: evt.viewState.zoom,
+          });
+        }}
       >
         <Marker latitude={latitude} longitude={longitude} />
       </ReactMapGL>

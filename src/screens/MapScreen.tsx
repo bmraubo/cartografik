@@ -1,9 +1,28 @@
+import { useState, useCallback } from "react";
 import { StyleSheet, Text, View, ActivityIndicator } from "react-native";
 import { Map } from "../components/Map";
+import type { ViewportState } from "../components/Map";
+import { MapTitleCard } from "../components/MapTitleCard";
 import { useLocation } from "../hooks/useLocation";
+import { useReverseGeocode } from "../hooks/useReverseGeocode";
+
+const INITIAL_ZOOM = 14;
 
 export function MapScreen() {
   const location = useLocation();
+  const [viewport, setViewport] = useState<ViewportState | null>(null);
+
+  const hasLocation = location.status === "granted";
+  const userLat = hasLocation ? location.latitude : 0;
+  const userLng = hasLocation ? location.longitude : 0;
+  const zoom = viewport?.zoom ?? INITIAL_ZOOM;
+  const viewLat = viewport?.latitude ?? userLat;
+
+  const locationName = useReverseGeocode(userLat, userLng);
+
+  const handleViewportChange = useCallback((v: ViewportState) => {
+    setViewport(v);
+  }, []);
 
   if (location.status === "loading") {
     return (
@@ -27,7 +46,14 @@ export function MapScreen() {
 
   return (
     <View style={styles.container}>
-      <Map latitude={location.latitude} longitude={location.longitude} />
+      <Map
+        latitude={location.latitude}
+        longitude={location.longitude}
+        onViewportChange={handleViewportChange}
+      />
+      <View style={styles.cardOverlay} pointerEvents="none">
+        <MapTitleCard locationName={locationName} zoom={zoom} latitude={viewLat} />
+      </View>
     </View>
   );
 }
@@ -35,6 +61,11 @@ export function MapScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  cardOverlay: {
+    position: "absolute",
+    bottom: 16,
+    left: 16,
   },
   centered: {
     flex: 1,

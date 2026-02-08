@@ -5,9 +5,16 @@ import { buildStyle } from "../utils/styleBuilder";
 import { DOT_PATTERN_BASE64 } from "../utils/dotPattern";
 import defaultConfig from "../config/mapStyle";
 
+export interface ViewportState {
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
+
 interface MapProps {
   latitude: number;
   longitude: number;
+  onViewportChange?: (viewport: ViewportState) => void;
 }
 
 const ZOOM = 14;
@@ -16,7 +23,7 @@ const patternImages = {
   "retro-dots": { uri: DOT_PATTERN_BASE64 },
 };
 
-export function Map({ latitude, longitude }: MapProps) {
+export function Map({ latitude, longitude, onViewportChange }: MapProps) {
   const [mapStyleObj, setMapStyleObj] = useState<object | null>(null);
 
   useEffect(() => {
@@ -32,7 +39,22 @@ export function Map({ latitude, longitude }: MapProps) {
   }
 
   return (
-    <MapView style={styles.map} mapStyle={mapStyleObj} pitchEnabled={false} rotateEnabled={false}>
+    <MapView
+      style={styles.map}
+      mapStyle={mapStyleObj}
+      pitchEnabled={false}
+      rotateEnabled={false}
+      onRegionDidChange={(feature: any) => {
+        if (onViewportChange && feature?.geometry?.coordinates) {
+          const [lng, lat] = feature.geometry.coordinates;
+          onViewportChange({
+            latitude: lat,
+            longitude: lng,
+            zoom: feature.properties?.zoomLevel ?? 14,
+          });
+        }
+      }}
+    >
       <Camera
         defaultSettings={{
           centerCoordinate: [longitude, latitude],
