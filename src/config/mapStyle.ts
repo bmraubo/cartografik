@@ -28,6 +28,7 @@ const defaultConfig: MapStyleConfig = {
       sourceLayer: "poi",
       filter: ["==", "class", "bank"],
       visible: true,
+      textFont: ["IM Fell English Italic"],
     },
     {
       id: "cemetery",
@@ -41,6 +42,7 @@ const defaultConfig: MapStyleConfig = {
       sourceLayer: "poi",
       filter: ["==", "class", "library"],
       visible: true,
+      textFont: ["IM Fell English Italic"],
     },
     {
       id: "park",
@@ -54,12 +56,14 @@ const defaultConfig: MapStyleConfig = {
       sourceLayer: "poi",
       filter: ["==", "class", "post"],
       visible: true,
+      textFont: ["IM Fell English Italic"],
     },
     {
       id: "town-hall",
       sourceLayer: "poi",
       filter: ["==", "class", "town_hall"],
       visible: true,
+      textFont: ["IM Fell English Italic"],
     },
     {
       id: "museum",
@@ -73,6 +77,42 @@ const defaultConfig: MapStyleConfig = {
       sourceLayer: "poi",
       filter: ["==", "class", "railway"],
       visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "place-of-worship",
+      sourceLayer: "poi",
+      filter: ["==", "class", "place_of_worship"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "theatre",
+      sourceLayer: "poi",
+      filter: ["==", "class", "theatre"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "art-gallery",
+      sourceLayer: "poi",
+      filter: ["==", "class", "art_gallery"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "castle",
+      sourceLayer: "poi",
+      filter: ["==", "class", "castle"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "monument",
+      sourceLayer: "poi",
+      filter: ["==", "class", "monument"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
     },
   ],
 };

@@ -51,7 +51,7 @@ export function Map({ latitude, longitude }: MapProps) {
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
-        minZoom={10}
+        minZoom={14}
         maxPitch={0}
         dragRotate={false}
         pitchWithRotate={false}

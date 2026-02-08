@@ -38,7 +38,7 @@ export function Map({ latitude, longitude }: MapProps) {
           centerCoordinate: [longitude, latitude],
           zoomLevel: ZOOM,
         }}
-        minZoomLevel={10}
+        minZoomLevel={14}
       />
       <Images images={patternImages} />
       <MarkerView coordinate={[longitude, latitude]}>
