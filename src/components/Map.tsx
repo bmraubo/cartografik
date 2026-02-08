@@ -19,6 +19,12 @@ interface MapProps {
 
 const ZOOM = 14;
 
+// Greater London bounds
+const GREATER_LONDON_BOUNDS = {
+  sw: [-0.51, 51.28], // Southwest corner (lon, lat)
+  ne: [0.34, 51.69],  // Northeast corner (lon, lat)
+};
+
 const patternImages = {
   "retro-dots": { uri: DOT_PATTERN_BASE64 },
 };
@@ -61,6 +67,7 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
           zoomLevel: ZOOM,
         }}
         minZoomLevel={14}
+        maxBounds={GREATER_LONDON_BOUNDS}
       />
       <Images images={patternImages} />
       <MarkerView coordinate={[longitude, latitude]}>
