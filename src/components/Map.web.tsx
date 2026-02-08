@@ -20,6 +20,12 @@ interface MapProps {
   onViewportChange?: (viewport: ViewportState) => void;
 }
 
+// Greater London bounds: [sw, ne] as [LngLat, LngLat]
+const GREATER_LONDON_BOUNDS: [[number, number], [number, number]] = [
+  [-0.51, 51.28], // Southwest (lon, lat)
+  [0.34, 51.69],  // Northeast (lon, lat)
+];
+
 export function Map({ latitude, longitude, onViewportChange }: MapProps) {
   const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
 
@@ -59,6 +65,7 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
         minZoom={14}
+        maxBounds={GREATER_LONDON_BOUNDS}
         maxPitch={0}
         dragRotate={false}
         pitchWithRotate={false}
