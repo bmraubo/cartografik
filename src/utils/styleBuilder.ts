@@ -335,6 +335,66 @@ function detectVectorSource(style: MapStyle): string {
   return "openmaptiles";
 }
 
+function addMapBorder(style: MapStyle): void {
+  const sources = (style as Record<string, unknown>).sources as Record<string, Record<string, unknown>>;
+
+  // Greater London bounds (must match maxBounds in Map components)
+  const sw: [number, number] = [-0.51, 51.28];
+  const ne: [number, number] = [0.34, 51.69];
+
+  sources["map-border-source"] = {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [[
+          [sw[0], sw[1]],
+          [ne[0], sw[1]],
+          [ne[0], ne[1]],
+          [sw[0], ne[1]],
+          [sw[0], sw[1]],
+        ]],
+      },
+      properties: {},
+    },
+  };
+
+  // Outer brown outline
+  style.layers.push({
+    id: "map-border-outline",
+    type: "line",
+    source: "map-border-source",
+    paint: {
+      "line-color": LABEL_COLOR,
+      "line-width": 12,
+    },
+  });
+
+  // Parchment fill between outline edges
+  style.layers.push({
+    id: "map-border-fill",
+    type: "line",
+    source: "map-border-source",
+    paint: {
+      "line-color": HALO_COLOR,
+      "line-width": 8,
+    },
+  });
+
+  // Alternating brown segments on top (dashes over parchment = scale-bar pattern)
+  style.layers.push({
+    id: "map-border-segments",
+    type: "line",
+    source: "map-border-source",
+    paint: {
+      "line-color": LABEL_COLOR,
+      "line-width": 8,
+      "line-dasharray": [10, 10],
+    },
+  });
+}
+
 function addDotPatternOverlay(style: MapStyle): void {
   const sources = (style as Record<string, unknown>).sources as Record<string, Record<string, unknown>>;
   sources["dot-pattern-source"] = {
@@ -385,6 +445,8 @@ export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
 
   const poiLayers = buildPOILayers(config, vectorSource);
   style.layers.push(...poiLayers);
+
+  addMapBorder(style);
 
   return style;
 }
