@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { StyleSheet, ActivityIndicator, View } from "react-native";
-import { MapView, Camera, MarkerView } from "@maplibre/maplibre-react-native";
+import { MapView, Camera, MarkerView, Images } from "@maplibre/maplibre-react-native";
 import { buildStyle } from "../utils/styleBuilder";
+import { DOT_PATTERN_BASE64 } from "../utils/dotPattern";
 import defaultConfig from "../config/mapStyle";
 
 interface MapProps {
@@ -10,6 +11,10 @@ interface MapProps {
 }
 
 const ZOOM = 14;
+
+const patternImages = {
+  "retro-dots": { uri: DOT_PATTERN_BASE64 },
+};
 
 export function Map({ latitude, longitude }: MapProps) {
   const [mapStyleObj, setMapStyleObj] = useState<object | null>(null);
@@ -34,6 +39,7 @@ export function Map({ latitude, longitude }: MapProps) {
           zoomLevel: ZOOM,
         }}
       />
+      <Images images={patternImages} />
       <MarkerView coordinate={[longitude, latitude]}>
         <View style={styles.marker} />
       </MarkerView>

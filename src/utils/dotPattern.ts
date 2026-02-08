@@ -1,0 +1,3 @@
+// Auto-generated dot pattern
+export const DOT_PATTERN_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAgklEQVR4nGNgGAUUgCg3o/8DajkMU91gWqgl2kCa+ArJfOooItNyWnqOaEfQRjG1wdALrsEEBjzUqB51pBpGdctplRiJNpNWlg+vXDbgPhlSwTngDsUbWvRwHV7LR/M8KYbSUj1Bw4ZUthsYA0m1nBZBSvUGKKmlHVU9RY6BQyadAACXtIg8r+3wZwAAAABJRU5ErkJggg==";
+export const DOT_PATTERN_SIZE = 32;

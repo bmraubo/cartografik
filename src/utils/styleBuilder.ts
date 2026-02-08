@@ -123,7 +123,7 @@ function applyRetroPalette(style: MapStyle): void {
 
     // Buildings — warm brownish beige
     if (id.includes("building") && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#DDD2BA", "fill-outline-color": "#C8BB9E" };
+      layer.paint = { ...paint, "fill-color": "#f0b19f", "fill-outline-color": "#d4907e" };
       continue;
     }
 
@@ -324,6 +324,35 @@ function detectVectorSource(style: MapStyle): string {
   return "openmaptiles";
 }
 
+function addDotPatternOverlay(style: MapStyle): void {
+  const sources = (style as Record<string, unknown>).sources as Record<string, Record<string, unknown>>;
+  sources["dot-pattern-source"] = {
+    type: "geojson",
+    data: {
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]],
+      },
+      properties: {},
+    },
+  };
+
+  // Find the first symbol layer to insert the pattern overlay beneath labels
+  const firstSymbolIdx = style.layers.findIndex((l) => l.type === "symbol");
+  const insertIdx = firstSymbolIdx >= 0 ? firstSymbolIdx : style.layers.length;
+
+  style.layers.splice(insertIdx, 0, {
+    id: "dot-pattern-overlay",
+    type: "fill",
+    source: "dot-pattern-source",
+    paint: {
+      "fill-pattern": "retro-dots",
+      "fill-opacity": 0.08,
+    },
+  });
+}
+
 export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
   const res = await fetch(config.baseStyleURL);
   const style: MapStyle = await res.json();
@@ -341,6 +370,7 @@ export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
 
   applyRetroPalette(style);
   applyTypography(style, config);
+  addDotPatternOverlay(style);
 
   const poiLayers = buildPOILayers(config, vectorSource);
   style.layers.push(...poiLayers);
