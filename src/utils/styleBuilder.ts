@@ -103,7 +103,6 @@ function applyRetroPalette(style: MapStyle): void {
       continue;
     }
 
-    // Residential / general landuse — warm beige (base fades to transparent at z16 so buildings show)
     if (id.includes("residential") && type === "fill") {
       layer.paint = {
         ...paint,
@@ -115,7 +114,8 @@ function applyRetroPalette(style: MapStyle): void {
 
     // Commercial/industrial — dusty pink/tan (base uses ~35% alpha in color)
     if ((id.includes("commercial") || id.includes("industrial")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#f0b19f", "fill-opacity": 0.6 };
+      const isIndustrial = id.includes("industrial");
+      layer.paint = { ...paint, "fill-color": isIndustrial ? "#feedc2" : "#f0b19f", "fill-opacity": isIndustrial ? 0.75 : 1 };
       continue;
     }
 
