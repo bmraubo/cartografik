@@ -80,8 +80,14 @@ function applyRetroPalette(style: MapStyle): void {
     }
 
     // Grass/vegetation — muted sage
+    // Forest (z0-z8) has base opacity 0.1 which is invisible with our muted color; boost it.
+    // Wood/Grass (z8+) have zoom ramps (0.7→1.0) which we preserve.
     if ((id.includes("grass") || id.includes("wood") || id.includes("forest")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#C8D4AC" };
+      const baseOpacity = paint["fill-opacity"];
+      const opacity = id.includes("forest")
+        ? ["interpolate", ["linear"], ["zoom"], 0, 0.3, 6, 0.5, 8, 0.7]
+        : baseOpacity ?? 0.5;
+      layer.paint = { ...paint, "fill-color": "#C8D4AC", "fill-opacity": opacity };
       continue;
     }
 
@@ -97,27 +103,32 @@ function applyRetroPalette(style: MapStyle): void {
       continue;
     }
 
-    // Residential / general landuse — warm beige
+    // Residential / general landuse — warm beige (base fades to transparent at z16 so buildings show)
     if (id.includes("residential") && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#EDE5D0" };
+      layer.paint = {
+        ...paint,
+        "fill-color": "#EDE5D0",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.3, 12, 0.2, 16, 0],
+      };
       continue;
     }
 
-    // Commercial/industrial — dusty pink/tan
+    // Commercial/industrial — dusty pink/tan (base uses ~35% alpha in color)
     if ((id.includes("commercial") || id.includes("industrial")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#E5D8C8" };
+      layer.paint = { ...paint, "fill-color": "#E5D8C8", "fill-opacity": 0.35 };
       continue;
     }
 
-    // School/hospital/stadium — muted warm tones
+    // School/hospital/stadium — muted warm tones (stadium base uses 35% alpha)
     if ((id.includes("school") || id.includes("hospital") || id.includes("stadium")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#E2D8C6" };
+      layer.paint = { ...paint, "fill-color": "#E2D8C6", "fill-opacity": id.includes("stadium") ? 0.35 : 1 };
       continue;
     }
 
-    // Other landuse
+    // Other landuse (base uses 20% alpha; rail uses 50%)
     if ((id === "other" || id.includes("quarry") || id.includes("rail")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#E6DCC8" };
+      const opacity = id.includes("rail") ? 0.5 : 0.3;
+      layer.paint = { ...paint, "fill-color": "#E6DCC8", "fill-opacity": opacity };
       continue;
     }
 
@@ -264,7 +275,7 @@ function applyTypography(style: MapStyle, config: MapStyleConfig): void {
     ) {
       layout["text-letter-spacing"] = 0.1;
     } else if (id.includes("road")) {
-      layout["text-letter-spacing"] = 0.4;
+      layout["text-letter-spacing"] = 0.05;
     } else if (id.includes("town") || id.includes("village")) {
       layout["text-letter-spacing"] = 0;
     }
