@@ -12,45 +12,42 @@ type MapStyle = Record<string, unknown> & {
   glyphs?: string;
 };
 
-const RETRO_PALETTE = {
-  background: "#F9F1DC",
-  water: "#B8D4E3",
-  waterOutline: "#9DC3D9",
-  land: "#EDE3C9",
-  landuse: "#E6DABA",
-  park: "#CADBA5",
-  forest: "#B8CC96",
-  cemetery: "#C9D8A8",
-  building: "#DDD2BA",
-  buildingOutline: "#C4B699",
-  roadFill: "#F5EDD8",
-  roadOutline: "#C8B898",
-  railwayLine: "#C4B090",
-  pathPedestrian: "#a08060",
-  pathSidewalk: "#c4b8a0",
-  boundary: "#C0A882",
-  label: "#5A4636",
-  labelWater: "#6888A0",
-  labelHalo: "#F9F1DC",
-  dustyPink: "#D4B5A0",
-} as const;
+// Guide: "pastel colors: variations of brown, beige, and dusty pink"
+// All colors derived from the retro palette shown in the guide
+const HALO_COLOR = "#F9F1DC";
+const LABEL_COLOR = "#5A4636";
 
-const MODERN_LAYER_PATTERNS = [
+// Layers the guide explicitly says to remove
+const LAYERS_TO_REMOVE = new Set([
+  "sand",
+  "water offset",
+  "river tunnel",
+  "tunnel path",
   "ferry",
-  "aeroway",
-  "aerodrome",
-  "rail_station",
-  "bus",
-  "transit",
-  "shield",
-  "motorway_junction",
-  "highway-shield",
-];
+  "ferry labels",
+  "oneway road",
+  "highway shield",
+  "highway shield (us)",
+  "building top",
+  // POI categories to remove (handled by stripping all base POIs)
+  "transport",
+  "shopping",
+  "sport",
+  "food",
+  "drink",
+  "other poi",
+  "station",
+  "healthcare",
+  "education",
+  "culture",
+  "amenity",
+  "tourism",
+]);
 
-function isModernLayer(id: string): boolean {
-  return MODERN_LAYER_PATTERNS.some((p) => id.includes(p));
-}
-
+/**
+ * Apply the retro color palette.
+ * Guide: use pastel browns, beiges, and dusty pinks throughout.
+ */
 function applyRetroPalette(style: MapStyle): void {
   for (const layer of style.layers) {
     const id = layer.id.toLowerCase();
@@ -58,247 +55,231 @@ function applyRetroPalette(style: MapStyle): void {
     const paint = layer.paint ?? {};
     const layout = layer.layout ?? {};
 
-    if (isModernLayer(id)) {
+    // Remove layers the guide says to delete
+    if (LAYERS_TO_REMOVE.has(id)) {
       layer.layout = { ...layout, visibility: "none" };
       continue;
     }
 
-    // Background
-    if (id === "background" || type === "background") {
-      layer.paint = { ...paint, "background-color": RETRO_PALETTE.background };
+    // Background — warm parchment
+    if (type === "background") {
+      layer.paint = { ...paint, "background-color": HALO_COLOR };
       continue;
     }
 
-    // Water fills
+    // Water — muted dusty blue
     if (id.includes("water") && type === "fill") {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.water,
-        "fill-opacity": 0.85,
-      };
+      layer.paint = { ...paint, "fill-color": "#B8CDD9" };
       continue;
     }
 
-    // Water lines
-    if (id.includes("water") && type === "line") {
-      layer.paint = {
-        ...paint,
-        "line-color": RETRO_PALETTE.waterOutline,
-        "line-blur": 1,
-        "line-opacity": 0.6,
-      };
+    // Rivers/waterways
+    if ((id.includes("river") || id.includes("waterway")) && type === "line") {
+      layer.paint = { ...paint, "line-color": "#A8BFCC" };
       continue;
     }
 
-    // Parks and green areas
-    if (
-      (id.includes("park") || id.includes("grass") || id.includes("vegetation")) &&
-      type === "fill"
-    ) {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.park,
-        "fill-opacity": 0.6,
-      };
+    // Grass/vegetation — muted sage
+    if ((id.includes("grass") || id.includes("wood") || id.includes("forest")) && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#C8D4AC" };
       continue;
     }
 
-    // Forests
-    if ((id.includes("forest") || id.includes("wood")) && type === "fill") {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.forest,
-        "fill-opacity": 0.55,
-      };
+    // Glacier — faint cool white
+    if (id.includes("glacier") && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E8EDE6" };
       continue;
     }
 
-    // Cemeteries
+    // Cemetery — slightly different green
     if (id.includes("cemetery") && type === "fill") {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.cemetery,
-        "fill-opacity": 0.5,
-      };
+      layer.paint = { ...paint, "fill-color": "#C5D1A8" };
       continue;
     }
 
-    // Buildings
+    // Residential / general landuse — warm beige
+    if (id.includes("residential") && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#EDE5D0" };
+      continue;
+    }
+
+    // Commercial/industrial — dusty pink/tan
+    if ((id.includes("commercial") || id.includes("industrial")) && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E5D8C8" };
+      continue;
+    }
+
+    // School/hospital/stadium — muted warm tones
+    if ((id.includes("school") || id.includes("hospital") || id.includes("stadium")) && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E2D8C6" };
+      continue;
+    }
+
+    // Other landuse
+    if ((id === "other" || id.includes("quarry") || id.includes("rail")) && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E6DCC8" };
+      continue;
+    }
+
+    // Buildings — warm brownish beige
     if (id.includes("building") && type === "fill") {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.building,
-        "fill-opacity": 0.6,
-        "fill-outline-color": RETRO_PALETTE.buildingOutline,
-      };
+      layer.paint = { ...paint, "fill-color": "#DDD2BA", "fill-outline-color": "#C8BB9E" };
       continue;
     }
 
-    // General landuse
-    if (id.includes("landuse") && type === "fill") {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.landuse,
-        "fill-opacity": 0.4,
-      };
-      continue;
-    }
-
-    // Land/earth
-    if (id.includes("land") && type === "fill" && !id.includes("landuse")) {
-      layer.paint = {
-        ...paint,
-        "fill-color": RETRO_PALETTE.land,
-      };
-      continue;
-    }
-
-    // Hide base path layers (replaced by custom layers)
+    // Road fills — pale cream
     if (
       type === "line" &&
-      (id.includes("path") || id.includes("pedestrian") || id.includes("footway") || id.includes("foot"))
+      (id.includes("road") || id.includes("highway") || id.includes("minor road") || id.includes("major road"))
     ) {
-      layer.layout = { ...layout, visibility: "none" };
-      continue;
-    }
-
-    // Railway
-    if (type === "line" && id.includes("rail")) {
-      layer.paint = {
-        ...paint,
-        "line-color": RETRO_PALETTE.railwayLine,
-        "line-opacity": 0.5,
-        "line-dasharray": [3, 3],
-      };
-      continue;
-    }
-
-    // Roads
-    if (
-      type === "line" &&
-      (id.includes("road") || id.includes("highway") || id.includes("street") || id.includes("transit") || id.includes("bridge"))
-    ) {
-      const isMajor =
-        id.includes("major") ||
-        id.includes("trunk") ||
-        id.includes("motorway") ||
-        id.includes("primary");
-      const isCasing = id.includes("casing") || id.includes("case");
-      if (isCasing) {
-        layer.paint = {
-          ...paint,
-          "line-color": RETRO_PALETTE.roadOutline,
-          "line-opacity": 0.8,
-        };
+      const isOutline = id.includes("outline");
+      if (isOutline) {
+        layer.paint = { ...paint, "line-color": "#C8B898" };
       } else {
-        layer.paint = {
-          ...paint,
-          "line-color": RETRO_PALETTE.roadFill,
-          "line-opacity": 0.9,
-        };
+        layer.paint = { ...paint, "line-color": "#F0E8D4" };
       }
       continue;
     }
 
-    // Boundaries
-    if (type === "line" && id.includes("boundary")) {
+    // Tunnels
+    if (id.includes("tunnel") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#D8D0C0", "line-opacity": 0.6 };
+      continue;
+    }
+
+    // Bridge fill
+    if (id.includes("bridge") && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E8E0CC" };
+      continue;
+    }
+
+    // Paths
+    if (id.includes("path") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#C8BC9E" };
+      continue;
+    }
+
+    // Railway — muted brown
+    if (id.includes("railway") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#C0B498" };
+      continue;
+    }
+
+    // Transit
+    if (id.includes("transit") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#C8BC9E" };
+      continue;
+    }
+
+    // Cablecar
+    if (id.includes("cablecar") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#B8AC90" };
+      continue;
+    }
+
+    // Pier
+    if (id.includes("pier") && type === "fill") {
+      layer.paint = { ...paint, "fill-color": "#E0D8C4" };
+      continue;
+    }
+    if (id.includes("pier") && type === "line") {
+      layer.paint = { ...paint, "line-color": "#C8C0AC" };
+      continue;
+    }
+
+    // Boundaries — subtle dashed brown
+    if (id.includes("border") && type === "line") {
+      const isCountry = id.includes("country");
       layer.paint = {
         ...paint,
-        "line-color": RETRO_PALETTE.boundary,
-        "line-blur": 1.5,
-        "line-opacity": 0.45,
-        "line-dasharray": [4, 3],
+        "line-color": isCountry ? "#B0A080" : "#C0B498",
+        "line-opacity": isCountry ? 0.6 : 0.4,
       };
       continue;
     }
 
-    // Symbol layers — apply typography hierarchy
+    // All symbol/label layers — apply retro halo and label color
     if (type === "symbol") {
-      const isWaterLabel =
-        id.includes("water") || id.includes("ocean") || id.includes("sea") || id.includes("lake");
+      const isWater =
+        id.includes("water") ||
+        id.includes("ocean") ||
+        id.includes("sea") ||
+        id.includes("lake") ||
+        id.includes("river");
+
       layer.paint = {
         ...paint,
-        "text-color": isWaterLabel ? RETRO_PALETTE.labelWater : RETRO_PALETTE.label,
-        "text-halo-color": RETRO_PALETTE.labelHalo,
-        "text-halo-width": isWaterLabel ? 1 : 1.2,
+        "text-color": isWater ? "#6888A0" : LABEL_COLOR,
+        // Guide: halo #F9F1DC, 80% opacity, 1-1.5px width, with blur
+        "text-halo-color": HALO_COLOR,
+        "text-halo-width": isWater ? 1 : 1.2,
         "text-halo-blur": 0.5,
       };
-
-      // Apply letter-spacing hierarchy
-      const isCountry = id.includes("country") || id.includes("continent");
-      const isState = id.includes("state") || id.includes("province");
-      if (isCountry) {
-        layer.layout = { ...layout, "text-letter-spacing": 0.4 };
-      } else if (isState) {
-        layer.layout = { ...layout, "text-letter-spacing": 0.2 };
-      }
     }
   }
 }
 
-function applyFontHierarchy(style: MapStyle, config: MapStyleConfig): void {
+/**
+ * Apply font hierarchy and typography rules from the guide.
+ * Guide: Bold for continents/countries/capitals, Regular for cities/towns/roads,
+ * Italic for states/lakes/seas/oceans, Light Italic for rivers/villages/POIs.
+ * Letter spacing: 0-0.4em depending on feature type.
+ * Uppercase: continents, countries, capitals, states, islands.
+ */
+function applyTypography(style: MapStyle, config: MapStyleConfig): void {
   const regular = config.defaultFont;
   const italic = config.italicFont ?? regular;
 
   for (const layer of style.layers) {
     if (layer.type !== "symbol" || !layer.layout) continue;
-    if (!("text-font" in layer.layout)) continue;
 
     const id = layer.id.toLowerCase();
+    const layout = layer.layout;
 
-    // Italic: water labels, state/province labels
-    const useItalic =
-      id.includes("water") ||
-      id.includes("ocean") ||
-      id.includes("sea") ||
+    // Font assignment
+    if ("text-font" in layout) {
+      const useItalic =
+        id.includes("state") ||
+        id.includes("place label") ||
+        id.includes("lake") ||
+        id.includes("sea") ||
+        id.includes("ocean") ||
+        id.includes("river") ||
+        id.includes("village") ||
+        id.includes("island");
+
+      layout["text-font"] = useItalic ? italic : regular;
+    }
+
+    // Letter spacing — guide values
+    if (id.includes("continent") || id.includes("country")) {
+      layout["text-letter-spacing"] = 0.3;
+    } else if (id.includes("capital") || id.includes("state") || id.includes("city")) {
+      layout["text-letter-spacing"] = 0.2;
+    } else if (
       id.includes("lake") ||
       id.includes("river") ||
+      id.includes("island") ||
+      id.includes("airport")
+    ) {
+      layout["text-letter-spacing"] = 0.1;
+    } else if (id.includes("road")) {
+      layout["text-letter-spacing"] = 0.4;
+    } else if (id.includes("town") || id.includes("village")) {
+      layout["text-letter-spacing"] = 0;
+    }
+
+    // Uppercase — guide: continents, countries, capitals, states, islands
+    if (
+      id.includes("continent") ||
+      id.includes("country") ||
+      id.includes("capital") ||
       id.includes("state") ||
-      id.includes("province");
-
-    layer.layout["text-font"] = useItalic ? italic : regular;
+      id.includes("island")
+    ) {
+      layout["text-transform"] = "uppercase";
+    }
   }
-}
-
-function buildPathLayers(source: string): StyleLayer[] {
-  return [
-    {
-      id: "path-sidewalk",
-      type: "line",
-      source,
-      "source-layer": "transportation",
-      filter: [
-        "all",
-        ["in", "class", "path", "footway"],
-        ["==", "subclass", "sidewalk"],
-      ],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": RETRO_PALETTE.pathSidewalk,
-        "line-opacity": 0.6,
-        "line-dasharray": [1, 2],
-        "line-width": 1.5,
-      },
-    },
-    {
-      id: "path-pedestrian",
-      type: "line",
-      source,
-      "source-layer": "transportation",
-      filter: [
-        "all",
-        ["in", "class", "path", "pedestrian", "footway"],
-        ["!=", "subclass", "sidewalk"],
-      ],
-      layout: { "line-cap": "round", "line-join": "round" },
-      paint: {
-        "line-color": RETRO_PALETTE.pathPedestrian,
-        "line-opacity": 0.675,
-        "line-dasharray": [2, 1],
-        "line-width": 3,
-      },
-    },
-  ];
 }
 
 function buildPOILayers(config: MapStyleConfig, source: string): StyleLayer[] {
@@ -312,17 +293,21 @@ function buildPOILayers(config: MapStyleConfig, source: string): StyleLayer[] {
       filter: cat.filter,
       layout: {
         "text-field": ["get", "name"],
-        "text-font": cat.textFont ?? config.defaultFont,
-        "text-size": 12,
+        "text-font": cat.textFont ?? config.italicFont ?? config.defaultFont,
+        "text-size": [
+          "interpolate", ["linear"], ["zoom"],
+          14, 10,
+          16, 12,
+        ],
         "text-anchor": "top",
         "text-offset": [0, 0.8],
+        "text-letter-spacing": 0.1,
         visibility: "visible",
-        ...(cat.iconImage ? { "icon-image": cat.iconImage, "icon-size": 0.6 } : {}),
       },
       paint: {
-        "text-color": RETRO_PALETTE.label,
-        "text-halo-color": RETRO_PALETTE.labelHalo,
-        "text-halo-width": 1.2,
+        "text-color": LABEL_COLOR,
+        "text-halo-color": HALO_COLOR,
+        "text-halo-width": 1,
         "text-halo-blur": 0.5,
       },
     }));
@@ -347,7 +332,7 @@ export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
 
   const vectorSource = detectVectorSource(style);
 
-  // Remove 3D buildings, base POI layers, and modern transport layers
+  // Remove 3D buildings and all base POI symbol layers
   style.layers = style.layers.filter(
     (l) =>
       l.type !== "fill-extrusion" &&
@@ -355,11 +340,10 @@ export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
   );
 
   applyRetroPalette(style);
-  applyFontHierarchy(style, config);
+  applyTypography(style, config);
 
-  const pathLayers = buildPathLayers(vectorSource);
   const poiLayers = buildPOILayers(config, vectorSource);
-  style.layers.push(...pathLayers, ...poiLayers);
+  style.layers.push(...poiLayers);
 
   return style;
 }
