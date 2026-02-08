@@ -61,6 +61,19 @@ const defaultConfig: MapStyleConfig = {
       filter: ["==", "class", "town_hall"],
       visible: true,
     },
+    {
+      id: "museum",
+      sourceLayer: "poi",
+      filter: ["==", "class", "museum"],
+      visible: true,
+      textFont: ["IM Fell English Italic"],
+    },
+    {
+      id: "railway",
+      sourceLayer: "poi",
+      filter: ["==", "class", "railway"],
+      visible: true,
+    },
   ],
 };
 
