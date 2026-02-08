@@ -107,15 +107,15 @@ function applyRetroPalette(style: MapStyle): void {
     if (id.includes("residential") && type === "fill") {
       layer.paint = {
         ...paint,
-        "fill-color": "#EDE5D0",
-        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.3, 12, 0.2, 16, 0],
+        "fill-color": "#f0b19f",
+        "fill-opacity": ["interpolate", ["linear"], ["zoom"], 4, 0.6, 12, 0.5, 16, 0],
       };
       continue;
     }
 
     // Commercial/industrial — dusty pink/tan (base uses ~35% alpha in color)
     if ((id.includes("commercial") || id.includes("industrial")) && type === "fill") {
-      layer.paint = { ...paint, "fill-color": "#E5D8C8", "fill-opacity": 0.35 };
+      layer.paint = { ...paint, "fill-color": "#f0b19f", "fill-opacity": 0.6 };
       continue;
     }
 
