@@ -1,58 +1,49 @@
-import { useEffect, useRef } from "react";
-import { StyleSheet, View } from "react-native";
-import L from "leaflet";
+import { useState, useEffect } from "react";
+import { StyleSheet, View, ActivityIndicator } from "react-native";
+import ReactMapGL, { Marker } from "react-map-gl/maplibre";
+import maplibregl from "maplibre-gl";
+import type { StyleSpecification } from "maplibre-gl";
+import "maplibre-gl/dist/maplibre-gl.css";
+import { buildStyle } from "../utils/styleBuilder";
+import defaultConfig from "../config/mapStyle";
 
 interface MapProps {
   latitude: number;
   longitude: number;
 }
 
-const LEAFLET_CSS =
-  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
-
-function injectLeafletCSS() {
-  if (document.querySelector(`link[href="${LEAFLET_CSS}"]`)) return;
-  const link = document.createElement("link");
-  link.rel = "stylesheet";
-  link.href = LEAFLET_CSS;
-  document.head.appendChild(link);
-}
-
 export function Map({ latitude, longitude }: MapProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<L.Map | null>(null);
+  const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
 
   useEffect(() => {
-    injectLeafletCSS();
+    buildStyle(defaultConfig).then((s) => setMapStyle(s as StyleSpecification));
   }, []);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    if (mapRef.current) {
-      mapRef.current.remove();
-    }
-
-    const map = L.map(containerRef.current).setView([latitude, longitude], 14);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution:
-        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-    }).addTo(map);
-
-    L.marker([latitude, longitude]).addTo(map).bindPopup("You are here");
-
-    mapRef.current = map;
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, [latitude, longitude]);
+  if (!mapStyle) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <div ref={containerRef} style={{ width: "100%", height: "100%" }} />
+      <ReactMapGL
+        mapLib={maplibregl}
+        initialViewState={{
+          latitude,
+          longitude,
+          zoom: 14,
+        }}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={mapStyle}
+        maxPitch={0}
+        dragRotate={false}
+        pitchWithRotate={false}
+      >
+        <Marker latitude={latitude} longitude={longitude} />
+      </ReactMapGL>
     </View>
   );
 }

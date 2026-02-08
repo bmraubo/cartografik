@@ -1,29 +1,42 @@
-import { StyleSheet } from "react-native";
-import MapView, { Marker, PROVIDER_DEFAULT } from "react-native-maps";
+import { useState, useEffect } from "react";
+import { StyleSheet, ActivityIndicator, View } from "react-native";
+import { MapView, Camera, MarkerView } from "@maplibre/maplibre-react-native";
+import { buildStyle } from "../utils/styleBuilder";
+import defaultConfig from "../config/mapStyle";
 
 interface MapProps {
   latitude: number;
   longitude: number;
 }
 
-const LATITUDE_DELTA = 0.05;
-const LONGITUDE_DELTA = 0.05;
+const ZOOM = 14;
 
 export function Map({ latitude, longitude }: MapProps) {
+  const [mapStyleObj, setMapStyleObj] = useState<object | null>(null);
+
+  useEffect(() => {
+    buildStyle(defaultConfig).then(setMapStyleObj);
+  }, []);
+
+  if (!mapStyleObj) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+      </View>
+    );
+  }
+
   return (
-    <MapView
-      style={styles.map}
-      provider={PROVIDER_DEFAULT}
-      initialRegion={{
-        latitude,
-        longitude,
-        latitudeDelta: LATITUDE_DELTA,
-        longitudeDelta: LONGITUDE_DELTA,
-      }}
-      showsUserLocation
-      showsMyLocationButton
-    >
-      <Marker coordinate={{ latitude, longitude }} title="You are here" />
+    <MapView style={styles.map} mapStyle={mapStyleObj} pitchEnabled={false} rotateEnabled={false}>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [longitude, latitude],
+          zoomLevel: ZOOM,
+        }}
+      />
+      <MarkerView coordinate={[longitude, latitude]}>
+        <View style={styles.marker} />
+      </MarkerView>
     </MapView>
   );
 }
@@ -31,5 +44,18 @@ export function Map({ latitude, longitude }: MapProps) {
 const styles = StyleSheet.create({
   map: {
     flex: 1,
+  },
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  marker: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: "#c0392b",
+    borderWidth: 2,
+    borderColor: "#fff",
   },
 });
