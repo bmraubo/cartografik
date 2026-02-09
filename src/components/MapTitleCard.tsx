@@ -15,6 +15,8 @@ interface MapTitleCardProps {
   locationName: string | null;
   zoom: number;
   latitude: number;
+  terraIncognita: boolean;
+  onTerraIncognitaChange: (value: boolean) => void;
 }
 
 // Padding/border consumed by the card chrome: outerBorder(2+3) + innerBorder(1+24) = 30 per side
@@ -114,10 +116,9 @@ function DecorativeRule() {
 
 const CARD_WIDTH_RATIO = 0.1875;
 
-export function MapTitleCard({ locationName, zoom, latitude }: MapTitleCardProps) {
+export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onTerraIncognitaChange }: MapTitleCardProps) {
   const { width: windowWidth } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
-  const [terraIncognita, setTerraIncognita] = useState(false);
   if (!locationName) return null;
 
   const cardWidth = windowWidth * CARD_WIDTH_RATIO;
@@ -142,7 +143,7 @@ export function MapTitleCard({ locationName, zoom, latitude }: MapTitleCardProps
           <View style={styles.trayInner}>
             <Pressable
               style={styles.checkboxRow}
-              onPress={() => setTerraIncognita((v) => !v)}
+              onPress={() => onTerraIncognitaChange(!terraIncognita)}
             >
               <View style={[styles.checkbox, terraIncognita && styles.checkboxChecked]}>
                 {terraIncognita && <Text style={styles.checkmark}>&#x2713;</Text>}

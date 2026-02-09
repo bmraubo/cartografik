@@ -424,6 +424,37 @@ function addDotPatternOverlay(style: MapStyle): void {
   });
 }
 
+function addTerraIncognitaLayer(style: MapStyle): void {
+  const sources = (style as Record<string, unknown>).sources as Record<string, Record<string, unknown>>;
+  sources["terra-incognita-source"] = {
+    type: "geojson",
+    data: {
+      type: "FeatureCollection",
+      features: [{
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [[[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]]],
+        },
+        properties: { opacity: 0.95 },
+      }],
+    },
+  };
+
+  style.layers.push({
+    id: "terra-incognita",
+    type: "fill",
+    source: "terra-incognita-source",
+    layout: {
+      visibility: "visible",
+    },
+    paint: {
+      "fill-color": HALO_COLOR,
+      "fill-opacity": ["get", "opacity"],
+    },
+  });
+}
+
 export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
   const res = await fetch(config.baseStyleURL);
   const style: MapStyle = await res.json();
@@ -446,6 +477,7 @@ export async function buildStyle(config: MapStyleConfig): Promise<MapStyle> {
   const poiLayers = buildPOILayers(config, vectorSource);
   style.layers.push(...poiLayers);
 
+  addTerraIncognitaLayer(style);
   addMapBorder(style);
 
   return style;

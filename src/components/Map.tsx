@@ -14,6 +14,7 @@ export interface ViewportState {
 interface MapProps {
   latitude: number;
   longitude: number;
+  terraIncognita?: boolean;
   onViewportChange?: (viewport: ViewportState) => void;
 }
 
