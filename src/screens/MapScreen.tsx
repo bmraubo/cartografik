@@ -51,7 +51,7 @@ export function MapScreen() {
         longitude={location.longitude}
         onViewportChange={handleViewportChange}
       />
-      <View style={styles.cardOverlay} pointerEvents="none">
+      <View style={styles.cardOverlay} pointerEvents="box-none">
         <MapTitleCard locationName={locationName} zoom={zoom} latitude={viewLat} />
       </View>
     </View>
@@ -64,8 +64,10 @@ const styles = StyleSheet.create({
   },
   cardOverlay: {
     position: "absolute",
+    top: 16,
     bottom: 16,
     left: 16,
+    justifyContent: "flex-end",
   },
   centered: {
     flex: 1,

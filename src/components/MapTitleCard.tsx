@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Platform, useWindowDimensions } from "react-native";
+import { useState } from "react";
+import { StyleSheet, Text, View, Pressable, Platform, useWindowDimensions } from "react-native";
 
 const PARCHMENT = "#F9F1DC";
 const BROWN = "#5A4636";
@@ -115,25 +116,92 @@ const CARD_WIDTH_RATIO = 0.1875;
 
 export function MapTitleCard({ locationName, zoom, latitude }: MapTitleCardProps) {
   const { width: windowWidth } = useWindowDimensions();
+  const [isOpen, setIsOpen] = useState(false);
   if (!locationName) return null;
 
   const cardWidth = windowWidth * CARD_WIDTH_RATIO;
   const barMaxWidth = cardWidth - CARD_CHROME_PX;
 
   return (
-    <View style={[styles.outerBorder, { width: cardWidth }]}>
-      <View style={styles.innerBorder}>
-        <DecorativeRule />
-        <Text style={styles.locationName}>{locationName.toUpperCase()}</Text>
-        <DecorativeRule />
-        <Text style={styles.scale}>Scale {formatScale(zoom, latitude)}</Text>
-        <ScaleBar zoom={zoom} latitude={latitude} maxWidthPx={barMaxWidth} />
+    <View style={[styles.wrapper, isOpen && styles.wrapperOpen]}>
+      <Pressable onPress={() => setIsOpen((o) => !o)}>
+        <View style={styles.chevronButtonOuter}>
+          <View style={styles.chevronButtonInner}>
+            <View
+              style={[
+                styles.arrowhead,
+                isOpen && styles.arrowheadOpen,
+              ]}
+            />
+          </View>
+        </View>
+      </Pressable>
+      {isOpen && (
+        <View style={[styles.trayOuter, { width: cardWidth }]}>
+          <View style={styles.trayInner} />
+        </View>
+      )}
+      <View style={[styles.outerBorder, { width: cardWidth }]}>
+        <View style={styles.innerBorder}>
+          <DecorativeRule />
+          <Text style={styles.locationName}>{locationName.toUpperCase()}</Text>
+          <DecorativeRule />
+          <Text style={styles.scale}>Scale {formatScale(zoom, latitude)}</Text>
+          <ScaleBar zoom={zoom} latitude={latitude} maxWidthPx={barMaxWidth} />
+        </View>
       </View>
     </View>
   );
 }
 
+const CHEVRON_SIZE = 36;
+
 const styles = StyleSheet.create({
+  wrapper: {
+    alignItems: "center",
+  },
+  wrapperOpen: {
+    flex: 1,
+  },
+  arrowheadOpen: {
+    transform: [{ rotate: "180deg" }],
+  },
+  trayOuter: {
+    flex: 1,
+    borderWidth: 2,
+    borderColor: BROWN,
+    backgroundColor: PARCHMENT,
+    padding: 3,
+    marginBottom: 8,
+  },
+  trayInner: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: BROWN,
+  },
+  chevronButtonOuter: {
+    width: CHEVRON_SIZE * 2,
+    height: CHEVRON_SIZE,
+    borderTopLeftRadius: CHEVRON_SIZE,
+    borderTopRightRadius: CHEVRON_SIZE,
+    backgroundColor: PARCHMENT,
+    borderWidth: 2,
+    borderColor: BROWN,
+    borderBottomWidth: 0,
+    padding: 3,
+    paddingBottom: 0,
+    marginBottom: -2,
+  },
+  chevronButtonInner: {
+    flex: 1,
+    borderTopLeftRadius: CHEVRON_SIZE,
+    borderTopRightRadius: CHEVRON_SIZE,
+    borderWidth: 1,
+    borderColor: BROWN,
+    borderBottomWidth: 0,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   outerBorder: {
     borderWidth: 2,
     borderColor: BROWN,
@@ -166,6 +234,16 @@ const styles = StyleSheet.create({
     color: BROWN,
     fontSize: 6,
     marginHorizontal: 8,
+  },
+  arrowhead: {
+    width: 0,
+    height: 0,
+    borderLeftWidth: 10,
+    borderRightWidth: 10,
+    borderBottomWidth: 12,
+    borderLeftColor: "transparent",
+    borderRightColor: "transparent",
+    borderBottomColor: BROWN,
   },
   locationName: {
     fontFamily: serifFont,
