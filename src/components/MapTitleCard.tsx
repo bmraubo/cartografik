@@ -15,6 +15,8 @@ interface MapTitleCardProps {
   locationName: string | null;
   zoom: number;
   latitude: number;
+  terraIncognita: boolean;
+  onTerraIncognitaChange: (value: boolean) => void;
 }
 
 // Padding/border consumed by the card chrome: outerBorder(2+3) + innerBorder(1+24) = 30 per side
@@ -114,7 +116,7 @@ function DecorativeRule() {
 
 const CARD_WIDTH_RATIO = 0.1875;
 
-export function MapTitleCard({ locationName, zoom, latitude }: MapTitleCardProps) {
+export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onTerraIncognitaChange }: MapTitleCardProps) {
   const { width: windowWidth } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
   if (!locationName) return null;
@@ -138,7 +140,17 @@ export function MapTitleCard({ locationName, zoom, latitude }: MapTitleCardProps
       </Pressable>
       {isOpen && (
         <View style={[styles.trayOuter, { width: cardWidth }]}>
-          <View style={styles.trayInner} />
+          <View style={styles.trayInner}>
+            <Pressable
+              style={styles.checkboxRow}
+              onPress={() => onTerraIncognitaChange(!terraIncognita)}
+            >
+              <View style={[styles.checkbox, terraIncognita && styles.checkboxChecked]}>
+                {terraIncognita && <Text style={styles.checkmark}>&#x2713;</Text>}
+              </View>
+              <Text style={styles.checkboxLabel}>TERRA INCOGNITA</Text>
+            </Pressable>
+          </View>
         </View>
       )}
       <View style={[styles.outerBorder, { width: cardWidth }]}>
@@ -178,6 +190,36 @@ const styles = StyleSheet.create({
     flex: 1,
     borderWidth: 1,
     borderColor: BROWN,
+    padding: 12,
+  },
+  checkboxRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  checkbox: {
+    width: 18,
+    height: 18,
+    borderWidth: 1,
+    borderColor: BROWN,
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: 8,
+  },
+  checkboxChecked: {
+    backgroundColor: PARCHMENT,
+  },
+  checkmark: {
+    color: BROWN,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  checkboxLabel: {
+    flex: 1,
+    fontFamily: serifFont,
+    fontSize: 12,
+    color: BROWN,
+    letterSpacing: 2,
+    textAlign: "right",
   },
   chevronButtonOuter: {
     width: CHEVRON_SIZE * 2,

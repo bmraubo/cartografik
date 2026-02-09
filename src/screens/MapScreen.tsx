@@ -18,6 +18,7 @@ export function MapScreen() {
   const zoom = viewport?.zoom ?? INITIAL_ZOOM;
   const viewLat = viewport?.latitude ?? userLat;
 
+  const [terraIncognita, setTerraIncognita] = useState(true);
   const locationName = useReverseGeocode(userLat, userLng);
 
   const handleViewportChange = useCallback((v: ViewportState) => {
@@ -49,10 +50,11 @@ export function MapScreen() {
       <Map
         latitude={location.latitude}
         longitude={location.longitude}
+        terraIncognita={terraIncognita}
         onViewportChange={handleViewportChange}
       />
       <View style={styles.cardOverlay} pointerEvents="box-none">
-        <MapTitleCard locationName={locationName} zoom={zoom} latitude={viewLat} />
+        <MapTitleCard locationName={locationName} zoom={zoom} latitude={viewLat} terraIncognita={terraIncognita} onTerraIncognitaChange={setTerraIncognita} />
       </View>
     </View>
   );
