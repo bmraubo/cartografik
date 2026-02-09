@@ -122,7 +122,7 @@ export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onT
   if (!locationName) return null;
 
   const cardWidth = windowWidth * CARD_WIDTH_RATIO;
-  const barMaxWidth = cardWidth - CARD_CHROME_PX;
+  const barMaxWidth = (cardWidth - CARD_CHROME_PX) * 0.8;
 
   return (
     <View style={[styles.wrapper, isOpen && styles.wrapperOpen]}>
