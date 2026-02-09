@@ -68,6 +68,7 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
           zoomLevel: ZOOM,
         }}
         minZoomLevel={14}
+        maxZoomLevel={19}
         maxBounds={GREATER_LONDON_BOUNDS}
       />
       <Images images={patternImages} />

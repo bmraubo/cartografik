@@ -146,6 +146,7 @@ export function Map({ latitude, longitude, terraIncognita, onViewportChange }: M
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
         minZoom={14}
+        maxZoom={19}
         maxBounds={GREATER_LONDON_BOUNDS}
         maxPitch={0}
         dragRotate={false}
