@@ -18,7 +18,7 @@ interface MapProps {
   onViewportChange?: (viewport: ViewportState) => void;
 }
 
-const ZOOM = 14;
+const ZOOM = 17;
 
 // Greater London bounds
 const GREATER_LONDON_BOUNDS = {
@@ -57,7 +57,7 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
           onViewportChange({
             latitude: lat,
             longitude: lng,
-            zoom: feature.properties?.zoomLevel ?? 14,
+            zoom: feature.properties?.zoomLevel ?? 17,
           });
         }
       }}

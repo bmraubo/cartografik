@@ -6,7 +6,7 @@ import { MapTitleCard } from "../components/MapTitleCard";
 import { useLocation } from "../hooks/useLocation";
 import { useReverseGeocode } from "../hooks/useReverseGeocode";
 
-const INITIAL_ZOOM = 14;
+const INITIAL_ZOOM = 17;
 
 export function MapScreen() {
   const location = useLocation();

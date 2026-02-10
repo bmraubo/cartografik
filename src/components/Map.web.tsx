@@ -28,8 +28,8 @@ const GREATER_LONDON_BOUNDS: [[number, number], [number, number]] = [
 ];
 
 const REVEAL_RADIUS_M = 40;
-const FADE_DISTANCE_M = 20;
-const FADE_STEPS = 8;
+const FADE_DISTANCE_M = 40;
+const FADE_STEPS = 128;
 const BASE_OPACITY = 0.95;
 const CIRCLE_POINTS = 64;
 
@@ -141,7 +141,7 @@ export function Map({ latitude, longitude, terraIncognita, onViewportChange }: M
         initialViewState={{
           latitude,
           longitude,
-          zoom: 14,
+          zoom: 17,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}

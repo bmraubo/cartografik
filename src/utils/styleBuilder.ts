@@ -449,7 +449,7 @@ function addTerraIncognitaLayer(style: MapStyle): void {
       visibility: "visible",
     },
     paint: {
-      "fill-color": HALO_COLOR,
+      "fill-color": "#F4E8C8",
       "fill-opacity": ["get", "opacity"],
     },
   });
