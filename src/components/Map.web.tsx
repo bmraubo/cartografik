@@ -4,6 +4,7 @@ import ReactMapGL, { Marker } from "react-map-gl/maplibre";
 import maplibregl from "maplibre-gl";
 import type { StyleSpecification, MapLibreEvent } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import * as polygonClipping from "polygon-clipping";
 import { buildStyle } from "../utils/styleBuilder";
 import { DOT_PATTERN_BASE64, DOT_PATTERN_SIZE } from "../utils/dotPattern";
 import defaultConfig from "../config/mapStyle";
@@ -21,6 +22,7 @@ interface MapProps {
   terraIncognita?: boolean;
   recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
+  revealedRings?: (number[][][][] | null)[] | null;
 }
 
 // Greater London bounds: [sw, ne] as [LngLat, LngLat]
@@ -49,45 +51,91 @@ function createCircleRing(lat: number, lng: number, radiusM: number, clockwise: 
   return ring;
 }
 
-function createTerraIncognitaData(lat: number, lng: number) {
+function createTerraIncognitaData(
+  lat: number,
+  lng: number,
+  revealedRings?: (number[][][][] | null)[] | null,
+) {
   const outerFadeRadius = REVEAL_RADIUS_M + FADE_DISTANCE_M;
   const outerRing: [number, number][] = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
 
   const features: any[] = [];
 
-  // Main terra incognita: world polygon with hole at outer fade radius
-  features.push({
-    type: "Feature",
-    geometry: {
-      type: "Polygon",
-      coordinates: [outerRing, createCircleRing(lat, lng, outerFadeRadius, true)],
-    },
-    properties: { opacity: BASE_OPACITY },
-  });
+  // Outermost ring is the full revealed boundary (including fade zone)
+  const outermost = revealedRings?.[revealedRings.length - 1];
 
-  // Fade rings from inner (low opacity) to outer (high opacity)
-  const stepSize = FADE_DISTANCE_M / FADE_STEPS;
-  for (let j = 0; j < FADE_STEPS; j++) {
-    const innerR = REVEAL_RADIUS_M + j * stepSize;
-    const outerR = REVEAL_RADIUS_M + (j + 1) * stepSize;
-    const opacity = BASE_OPACITY * (j + 0.5) / FADE_STEPS;
+  if (outermost && outermost.length > 0) {
+    const holes: [number, number][][] = outermost.map((polygon) => {
+      const exterior = polygon[0] as [number, number][];
+      return [...exterior].reverse();
+    });
+
     features.push({
       type: "Feature",
       geometry: {
         type: "Polygon",
-        coordinates: [
-          createCircleRing(lat, lng, outerR, false),
-          createCircleRing(lat, lng, innerR, true),
-        ],
+        coordinates: [outerRing, ...holes],
       },
-      properties: { opacity },
+      properties: { opacity: BASE_OPACITY },
     });
+
+    // Fade bands: difference between consecutive union levels
+    const numSteps = revealedRings!.length - 1;
+    for (let j = 0; j < numSteps; j++) {
+      const inner = revealedRings![j];
+      const outer = revealedRings![j + 1];
+      if (!inner || !outer) continue;
+
+      const opacity = BASE_OPACITY * (j + 0.5) / numSteps;
+      const band = polygonClipping.difference(
+        outer as polygonClipping.MultiPolygon,
+        inner as polygonClipping.MultiPolygon,
+      );
+      if (band.length > 0) {
+        features.push({
+          type: "Feature",
+          geometry: {
+            type: "MultiPolygon",
+            coordinates: band,
+          },
+          properties: { opacity },
+        });
+      }
+    }
+  } else {
+    // Fallback: single circle with concentric fade rings
+    features.push({
+      type: "Feature",
+      geometry: {
+        type: "Polygon",
+        coordinates: [outerRing, createCircleRing(lat, lng, outerFadeRadius, true)],
+      },
+      properties: { opacity: BASE_OPACITY },
+    });
+
+    const stepSize = FADE_DISTANCE_M / FADE_STEPS;
+    for (let j = 0; j < FADE_STEPS; j++) {
+      const innerR = REVEAL_RADIUS_M + j * stepSize;
+      const outerR = REVEAL_RADIUS_M + (j + 1) * stepSize;
+      const opacity = BASE_OPACITY * (j + 0.5) / FADE_STEPS;
+      features.push({
+        type: "Feature",
+        geometry: {
+          type: "Polygon",
+          coordinates: [
+            createCircleRing(lat, lng, outerR, false),
+            createCircleRing(lat, lng, innerR, true),
+          ],
+        },
+        properties: { opacity },
+      });
+    }
   }
 
   return { type: "FeatureCollection", features };
 }
 
-export function Map({ latitude, longitude, initialZoom = 17, terraIncognita, recenterKey, onViewportChange }: MapProps) {
+export function Map({ latitude, longitude, initialZoom = 17, terraIncognita, recenterKey, onViewportChange, revealedRings }: MapProps) {
   const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -125,8 +173,8 @@ export function Map({ latitude, longitude, initialZoom = 17, terraIncognita, rec
     if (!map || !mapReady) return;
     const source = map.getSource("terra-incognita-source") as maplibregl.GeoJSONSource | undefined;
     if (!source) return;
-    source.setData(createTerraIncognitaData(latitude, longitude) as any);
-  }, [latitude, longitude, mapReady]);
+    source.setData(createTerraIncognitaData(latitude, longitude, revealedRings) as any);
+  }, [latitude, longitude, revealedRings, mapReady]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

@@ -19,6 +19,7 @@ interface MapProps {
   terraIncognita?: boolean;
   recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
+  revealedRings?: (number[][][][] | null)[] | null;
 }
 
 // Greater London bounds
