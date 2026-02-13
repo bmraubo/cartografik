@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, Text, View, Pressable, Platform, useWindowDimensions } from "react-native";
+import { useScaledSize } from "../hooks/useScaledSize";
 
 const PARCHMENT = "#F9F1DC";
 const BROWN = "#5A4636";
@@ -19,9 +20,6 @@ interface MapTitleCardProps {
   onTerraIncognitaChange: (value: boolean) => void;
 }
 
-// Padding/border consumed by the card chrome: outerBorder(2+3) + innerBorder(1+24) = 30 per side
-const CARD_CHROME_PX = 60;
-
 function metersPerPixel(zoom: number, latitude: number): number {
   return (156543.03392 * Math.cos((latitude * Math.PI) / 180)) / Math.pow(2, zoom);
 }
@@ -35,11 +33,9 @@ function formatScale(zoom: number, latitude: number): string {
 
 const NICE_DISTANCES = [50, 100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000];
 const NUM_SEGMENTS = 4;
-const BAR_HEIGHT = 4;
 
 function computeScaleBar(zoom: number, latitude: number, maxBarPx: number) {
   const mpp = metersPerPixel(zoom, latitude);
-  // Pick the largest nice distance that fits within the available width
   let best = NICE_DISTANCES[0];
   for (const d of NICE_DISTANCES) {
     const px = d / mpp;
@@ -56,61 +52,39 @@ function formatDistance(meters: number): string {
 }
 
 function ScaleBar({ zoom, latitude, maxWidthPx }: { zoom: number; latitude: number; maxWidthPx: number }) {
+  const s = useScaledSize();
+  const barHeight = s(4);
   const { widthPx, distance } = computeScaleBar(zoom, latitude, maxWidthPx);
   const segmentWidth = widthPx / NUM_SEGMENTS;
 
   return (
-    <View style={sbStyles.container}>
-      <View style={sbStyles.barOutline}>
+    <View style={{ alignItems: "center", marginTop: s(8) }}>
+      <View style={{ flexDirection: "row", backgroundColor: BROWN, padding: 1 }}>
         {Array.from({ length: NUM_SEGMENTS }, (_, i) => (
           <View
             key={i}
             style={{
               width: segmentWidth,
-              height: BAR_HEIGHT,
+              height: barHeight,
               backgroundColor: i % 2 === 0 ? BROWN : PARCHMENT,
             }}
           />
         ))}
       </View>
-      <View style={sbStyles.labels}>
-        <Text style={sbStyles.label}>0</Text>
-        <Text style={sbStyles.label}>{formatDistance(distance)}</Text>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", alignSelf: "stretch", marginTop: s(2) }}>
+        <Text style={{ fontFamily: serifFont, fontSize: s(9), color: BROWN, letterSpacing: s(0.5) }}>0</Text>
+        <Text style={{ fontFamily: serifFont, fontSize: s(9), color: BROWN, letterSpacing: s(0.5) }}>{formatDistance(distance)}</Text>
       </View>
     </View>
   );
 }
 
-const sbStyles = StyleSheet.create({
-  container: {
-    alignItems: "center",
-    marginTop: 8,
-  },
-  barOutline: {
-    flexDirection: "row",
-    backgroundColor: BROWN,
-    padding: 1,
-  },
-  labels: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignSelf: "stretch",
-    marginTop: 2,
-  },
-  label: {
-    fontFamily: serifFont,
-    fontSize: 9,
-    color: BROWN,
-    letterSpacing: 0.5,
-  },
-});
-
-function DecorativeRule() {
+function DecorativeRule({ s }: { s: (basePx: number) => number }) {
   return (
-    <View style={styles.ruleContainer}>
-      <View style={styles.ruleLine} />
-      <Text style={styles.ruleDiamond}>&#x25C6;</Text>
-      <View style={styles.ruleLine} />
+    <View style={fixedStyles.ruleContainer}>
+      <View style={fixedStyles.ruleLine} />
+      <Text style={{ color: BROWN, fontSize: s(6), marginHorizontal: s(8) }}>&#x25C6;</Text>
+      <View style={fixedStyles.ruleLine} />
     </View>
   );
 }
@@ -118,49 +92,169 @@ function DecorativeRule() {
 const CARD_WIDTH_RATIO = 0.1875;
 
 export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onTerraIncognitaChange }: MapTitleCardProps) {
-  const { width: windowWidth } = useWindowDimensions();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const s = useScaledSize();
   const [isOpen, setIsOpen] = useState(false);
   if (!locationName) return null;
 
-  const MIN_CARD_WIDTH = 220;
-  const cardWidth = Math.max(windowWidth * CARD_WIDTH_RATIO, MIN_CARD_WIDTH);
-  const barMaxWidth = (cardWidth - CARD_CHROME_PX) * 0.8;
+  const isPortrait = windowHeight > windowWidth;
+  const chevronSize = s(36);
+  const minCardWidth = s(220);
+  // Padding/border consumed by the card chrome: outerBorder(2+3) + innerBorder(1+24) = 30 per side
+  const cardChromePx = (s(2) + s(3) + 1 + s(24)) * 2;
+  const cardWidth = isPortrait
+    ? windowWidth - s(16) * 2
+    : Math.max(windowWidth * CARD_WIDTH_RATIO, minCardWidth);
+  const barMaxWidth = (cardWidth - cardChromePx) * 0.8;
 
   return (
-    <View style={[styles.wrapper, isOpen && styles.wrapperOpen]}>
+    <View style={[fixedStyles.wrapper, isOpen && fixedStyles.wrapperOpen]}>
       <Pressable onPress={() => setIsOpen((o) => !o)}>
-        <View style={styles.chevronButtonOuter}>
-          <View style={styles.chevronButtonInner}>
+        <View
+          style={{
+            width: chevronSize * 2,
+            height: chevronSize,
+            borderTopLeftRadius: chevronSize,
+            borderTopRightRadius: chevronSize,
+            backgroundColor: PARCHMENT,
+            borderWidth: s(2),
+            borderColor: BROWN,
+            borderBottomWidth: 0,
+            padding: s(3),
+            paddingBottom: 0,
+            marginBottom: -s(2),
+          }}
+        >
+          <View
+            style={{
+              flex: 1,
+              borderTopLeftRadius: chevronSize,
+              borderTopRightRadius: chevronSize,
+              borderWidth: 1,
+              borderColor: BROWN,
+              borderBottomWidth: 0,
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
             <View
               style={[
-                styles.arrowhead,
-                isOpen && styles.arrowheadOpen,
+                {
+                  width: 0,
+                  height: 0,
+                  borderLeftWidth: s(10),
+                  borderRightWidth: s(10),
+                  borderBottomWidth: s(12),
+                  borderLeftColor: "transparent",
+                  borderRightColor: "transparent",
+                  borderBottomColor: BROWN,
+                },
+                isOpen && fixedStyles.arrowheadOpen,
               ]}
             />
           </View>
         </View>
       </Pressable>
       {isOpen && (
-        <View style={[styles.trayOuter, { width: cardWidth }]}>
-          <View style={styles.trayInner}>
+        <View
+          style={{
+            flex: 1,
+            borderWidth: s(2),
+            borderColor: BROWN,
+            backgroundColor: PARCHMENT,
+            padding: s(3),
+            marginBottom: s(8),
+            width: cardWidth,
+          }}
+        >
+          <View style={{ flex: 1, borderWidth: 1, borderColor: BROWN, padding: s(12) }}>
             <Pressable
-              style={styles.checkboxRow}
+              style={fixedStyles.checkboxRow}
               onPress={() => onTerraIncognitaChange(!terraIncognita)}
             >
-              <View style={[styles.checkbox, terraIncognita && styles.checkboxChecked]}>
-                {terraIncognita && <Text style={styles.checkmark}>&#x2713;</Text>}
+              <View
+                style={[
+                  {
+                    width: s(18),
+                    height: s(18),
+                    borderWidth: 1,
+                    borderColor: BROWN,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginRight: s(8),
+                  },
+                  terraIncognita && fixedStyles.checkboxChecked,
+                ]}
+              >
+                {terraIncognita && (
+                  <Text style={{ color: BROWN, fontSize: s(13), lineHeight: s(18) }}>&#x2713;</Text>
+                )}
               </View>
-              <Text style={styles.checkboxLabel}>TERRA INCOGNITA</Text>
+              <Text
+                style={{
+                  flex: 1,
+                  fontFamily: serifFont,
+                  fontSize: s(12),
+                  color: BROWN,
+                  letterSpacing: s(2),
+                  textAlign: "right",
+                }}
+              >
+                TERRA INCOGNITA
+              </Text>
             </Pressable>
           </View>
         </View>
       )}
-      <View style={[styles.outerBorder, { width: cardWidth }]}>
-        <View style={styles.innerBorder}>
-          <DecorativeRule />
-          <Text style={styles.locationName}>{locationName.toUpperCase()}</Text>
-          <DecorativeRule />
-          <Text style={styles.scale}>Scale {formatScale(zoom, latitude)}</Text>
+      <View
+        style={[
+          {
+            borderWidth: s(2),
+            borderColor: BROWN,
+            backgroundColor: PARCHMENT,
+            padding: s(3),
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 2 },
+            shadowOpacity: 0.15,
+            shadowRadius: 4,
+            elevation: 4,
+          },
+          { width: cardWidth },
+        ]}
+      >
+        <View
+          style={{
+            borderWidth: 1,
+            borderColor: BROWN,
+            paddingHorizontal: s(24),
+            paddingVertical: s(10),
+            alignItems: "center",
+          }}
+        >
+          <DecorativeRule s={s} />
+          <Text
+            style={{
+              fontFamily: serifFont,
+              fontSize: s(18),
+              color: BROWN,
+              letterSpacing: s(4),
+              marginVertical: s(6),
+            }}
+          >
+            {locationName.toUpperCase()}
+          </Text>
+          <DecorativeRule s={s} />
+          <Text
+            style={{
+              fontFamily: serifFont,
+              fontSize: s(11),
+              color: BROWN,
+              letterSpacing: s(1),
+              marginTop: s(4),
+            }}
+          >
+            Scale {formatScale(zoom, latitude)}
+          </Text>
           <ScaleBar zoom={zoom} latitude={latitude} maxWidthPx={barMaxWidth} />
         </View>
       </View>
@@ -168,9 +262,7 @@ export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onT
   );
 }
 
-const CHEVRON_SIZE = 36;
-
-const styles = StyleSheet.create({
+const fixedStyles = StyleSheet.create({
   wrapper: {
     alignItems: "center",
   },
@@ -180,89 +272,12 @@ const styles = StyleSheet.create({
   arrowheadOpen: {
     transform: [{ rotate: "180deg" }],
   },
-  trayOuter: {
-    flex: 1,
-    borderWidth: 2,
-    borderColor: BROWN,
-    backgroundColor: PARCHMENT,
-    padding: 3,
-    marginBottom: 8,
-  },
-  trayInner: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: BROWN,
-    padding: 12,
-  },
   checkboxRow: {
     flexDirection: "row",
     alignItems: "center",
   },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderWidth: 1,
-    borderColor: BROWN,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-  },
   checkboxChecked: {
     backgroundColor: PARCHMENT,
-  },
-  checkmark: {
-    color: BROWN,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  checkboxLabel: {
-    flex: 1,
-    fontFamily: serifFont,
-    fontSize: 12,
-    color: BROWN,
-    letterSpacing: 2,
-    textAlign: "right",
-  },
-  chevronButtonOuter: {
-    width: CHEVRON_SIZE * 2,
-    height: CHEVRON_SIZE,
-    borderTopLeftRadius: CHEVRON_SIZE,
-    borderTopRightRadius: CHEVRON_SIZE,
-    backgroundColor: PARCHMENT,
-    borderWidth: 2,
-    borderColor: BROWN,
-    borderBottomWidth: 0,
-    padding: 3,
-    paddingBottom: 0,
-    marginBottom: -2,
-  },
-  chevronButtonInner: {
-    flex: 1,
-    borderTopLeftRadius: CHEVRON_SIZE,
-    borderTopRightRadius: CHEVRON_SIZE,
-    borderWidth: 1,
-    borderColor: BROWN,
-    borderBottomWidth: 0,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  outerBorder: {
-    borderWidth: 2,
-    borderColor: BROWN,
-    backgroundColor: PARCHMENT,
-    padding: 3,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  innerBorder: {
-    borderWidth: 1,
-    borderColor: BROWN,
-    paddingHorizontal: 24,
-    paddingVertical: 10,
-    alignItems: "center",
   },
   ruleContainer: {
     flexDirection: "row",
@@ -273,34 +288,5 @@ const styles = StyleSheet.create({
     flex: 1,
     height: StyleSheet.hairlineWidth,
     backgroundColor: BROWN,
-  },
-  ruleDiamond: {
-    color: BROWN,
-    fontSize: 6,
-    marginHorizontal: 8,
-  },
-  arrowhead: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 10,
-    borderRightWidth: 10,
-    borderBottomWidth: 12,
-    borderLeftColor: "transparent",
-    borderRightColor: "transparent",
-    borderBottomColor: BROWN,
-  },
-  locationName: {
-    fontFamily: serifFont,
-    fontSize: 18,
-    color: BROWN,
-    letterSpacing: 4,
-    marginVertical: 6,
-  },
-  scale: {
-    fontFamily: serifFont,
-    fontSize: 11,
-    color: BROWN,
-    letterSpacing: 1,
-    marginTop: 4,
   },
 });

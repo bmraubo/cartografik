@@ -17,6 +17,7 @@ export interface ViewportState {
 interface MapProps {
   latitude: number;
   longitude: number;
+  initialZoom?: number;
   terraIncognita?: boolean;
   recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
@@ -86,7 +87,7 @@ function createTerraIncognitaData(lat: number, lng: number) {
   return { type: "FeatureCollection", features };
 }
 
-export function Map({ latitude, longitude, terraIncognita, recenterKey, onViewportChange }: MapProps) {
+export function Map({ latitude, longitude, initialZoom = 17, terraIncognita, recenterKey, onViewportChange }: MapProps) {
   const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -130,8 +131,8 @@ export function Map({ latitude, longitude, terraIncognita, recenterKey, onViewpo
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !mapReady || !recenterKey) return;
-    map.flyTo({ center: [longitude, latitude], zoom: 17 });
-  }, [recenterKey, mapReady, latitude, longitude]);
+    map.flyTo({ center: [longitude, latitude], zoom: initialZoom });
+  }, [recenterKey, mapReady, latitude, longitude, initialZoom]);
 
   if (!mapStyle) {
     return (
@@ -148,7 +149,7 @@ export function Map({ latitude, longitude, terraIncognita, recenterKey, onViewpo
         initialViewState={{
           latitude,
           longitude,
-          zoom: 17,
+          zoom: initialZoom,
         }}
         style={{ width: "100%", height: "100%" }}
         mapStyle={mapStyle}
