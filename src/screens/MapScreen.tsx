@@ -1,21 +1,30 @@
 import { useState, useCallback } from "react";
-import { StyleSheet, Text, View, Pressable, ActivityIndicator } from "react-native";
+import { StyleSheet, Text, View, Pressable, ActivityIndicator, useWindowDimensions } from "react-native";
 import { Map } from "../components/Map";
 import type { ViewportState } from "../components/Map";
 import { MapTitleCard } from "../components/MapTitleCard";
 import { useLocation } from "../hooks/useLocation";
 import { useReverseGeocode } from "../hooks/useReverseGeocode";
+import { useScaledSize } from "../hooks/useScaledSize";
 
-const INITIAL_ZOOM = 17;
+const REFERENCE_WIDTH = 1440;
+const REFERENCE_ZOOM = 17;
+const MIN_ZOOM = 14;
+const MAX_ZOOM = 19;
 
 export function MapScreen() {
   const location = useLocation();
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isPortrait = windowHeight > windowWidth;
+  const s = useScaledSize();
   const [viewport, setViewport] = useState<ViewportState | null>(null);
+
+  const initialZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, REFERENCE_ZOOM + 0.5 * Math.log2(windowWidth / REFERENCE_WIDTH)));
 
   const hasLocation = location.status === "granted";
   const userLat = hasLocation ? location.latitude : 0;
   const userLng = hasLocation ? location.longitude : 0;
-  const zoom = viewport?.zoom ?? INITIAL_ZOOM;
+  const zoom = viewport?.zoom ?? initialZoom;
   const viewLat = viewport?.latitude ?? userLat;
 
   const [terraIncognita, setTerraIncognita] = useState(true);
@@ -30,7 +39,7 @@ export function MapScreen() {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
-        <Text style={styles.message}>Getting your location...</Text>
+        <Text style={[styles.message, { fontSize: s(16), marginTop: s(12) }]}>Getting your location...</Text>
       </View>
     );
   }
@@ -38,27 +47,53 @@ export function MapScreen() {
   if (location.status === "denied") {
     return (
       <View style={styles.centered}>
-        <Text style={styles.message}>{location.error}</Text>
-        <Text style={styles.hint}>
+        <Text style={[styles.message, { fontSize: s(16), marginTop: s(12) }]}>{location.error}</Text>
+        <Text style={[styles.hint, { fontSize: s(14), marginTop: s(8) }]}>
           Enable location access in your device settings to use Cartografik.
         </Text>
       </View>
     );
   }
 
+  const btnSize = s(40);
+
   return (
     <View style={styles.container}>
       <Map
         latitude={location.latitude}
         longitude={location.longitude}
+        initialZoom={initialZoom}
         terraIncognita={terraIncognita}
         recenterKey={recenterKey}
         onViewportChange={handleViewportChange}
       />
-      <Pressable style={styles.recenterButton} onPress={() => setRecenterKey((k) => k + 1)}>
-        <Text style={styles.recenterIcon}>&#x2316;</Text>
+      <Pressable
+        style={[
+          styles.recenterButtonFixed,
+          {
+            top: s(16),
+            right: s(16),
+            width: btnSize,
+            height: btnSize,
+            borderRadius: btnSize / 2,
+            borderWidth: s(2),
+          },
+        ]}
+        onPress={() => setRecenterKey((k) => k + 1)}
+      >
+        <Text style={{ fontSize: s(26), color: "#5A4636" }}>&#x2316;</Text>
       </Pressable>
-      <View style={styles.cardOverlay} pointerEvents="box-none">
+      <View
+        style={{
+          position: "absolute",
+          top: s(16),
+          bottom: s(16),
+          left: s(16),
+          ...(isPortrait && { right: s(16) }),
+          justifyContent: "flex-end",
+        }}
+        pointerEvents="box-none"
+      >
         <MapTitleCard locationName={locationName} zoom={zoom} latitude={viewLat} terraIncognita={terraIncognita} onTerraIncognitaChange={setTerraIncognita} />
       </View>
     </View>
@@ -69,15 +104,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  recenterButton: {
+  recenterButtonFixed: {
     position: "absolute",
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
     backgroundColor: "#F9F1DC",
-    borderWidth: 2,
     borderColor: "#5A4636",
     alignItems: "center",
     justifyContent: "center",
@@ -87,17 +116,6 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 4,
   },
-  recenterIcon: {
-    fontSize: 26,
-    color: "#5A4636",
-  },
-  cardOverlay: {
-    position: "absolute",
-    top: 16,
-    bottom: 16,
-    left: 16,
-    justifyContent: "flex-end",
-  },
   centered: {
     flex: 1,
     alignItems: "center",
@@ -105,13 +123,9 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   message: {
-    fontSize: 16,
-    marginTop: 12,
     textAlign: "center",
   },
   hint: {
-    fontSize: 14,
-    marginTop: 8,
     color: "#666",
     textAlign: "center",
   },

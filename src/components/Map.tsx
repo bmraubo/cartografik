@@ -4,6 +4,7 @@ import { MapView, Camera, MarkerView, Images } from "@maplibre/maplibre-react-na
 import { buildStyle } from "../utils/styleBuilder";
 import { DOT_PATTERN_BASE64 } from "../utils/dotPattern";
 import defaultConfig from "../config/mapStyle";
+import { useScaledSize } from "../hooks/useScaledSize";
 
 export interface ViewportState {
   latitude: number;
@@ -14,12 +15,11 @@ export interface ViewportState {
 interface MapProps {
   latitude: number;
   longitude: number;
+  initialZoom?: number;
   terraIncognita?: boolean;
   recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
 }
-
-const ZOOM = 17;
 
 // Greater London bounds
 const GREATER_LONDON_BOUNDS = {
@@ -31,7 +31,8 @@ const patternImages = {
   "retro-dots": { uri: DOT_PATTERN_BASE64 },
 };
 
-export function Map({ latitude, longitude, onViewportChange }: MapProps) {
+export function Map({ latitude, longitude, initialZoom = 17, onViewportChange }: MapProps) {
+  const s = useScaledSize();
   const [mapStyleObj, setMapStyleObj] = useState<object | null>(null);
 
   useEffect(() => {
@@ -66,7 +67,7 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
       <Camera
         defaultSettings={{
           centerCoordinate: [longitude, latitude],
-          zoomLevel: ZOOM,
+          zoomLevel: initialZoom,
         }}
         minZoomLevel={14}
         maxZoomLevel={19}
@@ -74,7 +75,16 @@ export function Map({ latitude, longitude, onViewportChange }: MapProps) {
       />
       <Images images={patternImages} />
       <MarkerView coordinate={[longitude, latitude]}>
-        <View style={styles.marker} />
+        <View
+          style={{
+            width: s(16),
+            height: s(16),
+            borderRadius: s(8),
+            backgroundColor: "#c0392b",
+            borderWidth: s(2),
+            borderColor: "#fff",
+          }}
+        />
       </MarkerView>
     </MapView>
   );
@@ -88,13 +98,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-  },
-  marker: {
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: "#c0392b",
-    borderWidth: 2,
-    borderColor: "#fff",
   },
 });
