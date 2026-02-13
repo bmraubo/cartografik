@@ -15,6 +15,7 @@ interface MapProps {
   latitude: number;
   longitude: number;
   terraIncognita?: boolean;
+  recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
 }
 

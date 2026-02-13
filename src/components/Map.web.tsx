@@ -18,6 +18,7 @@ interface MapProps {
   latitude: number;
   longitude: number;
   terraIncognita?: boolean;
+  recenterKey?: number;
   onViewportChange?: (viewport: ViewportState) => void;
 }
 
@@ -85,7 +86,7 @@ function createTerraIncognitaData(lat: number, lng: number) {
   return { type: "FeatureCollection", features };
 }
 
-export function Map({ latitude, longitude, terraIncognita, onViewportChange }: MapProps) {
+export function Map({ latitude, longitude, terraIncognita, recenterKey, onViewportChange }: MapProps) {
   const [mapStyle, setMapStyle] = useState<StyleSpecification | null>(null);
   const [mapReady, setMapReady] = useState(false);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
@@ -125,6 +126,12 @@ export function Map({ latitude, longitude, terraIncognita, onViewportChange }: M
     if (!source) return;
     source.setData(createTerraIncognitaData(latitude, longitude) as any);
   }, [latitude, longitude, mapReady]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map || !mapReady || !recenterKey) return;
+    map.flyTo({ center: [longitude, latitude], zoom: 17 });
+  }, [recenterKey, mapReady, latitude, longitude]);
 
   if (!mapStyle) {
     return (
