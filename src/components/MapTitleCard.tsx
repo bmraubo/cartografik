@@ -47,7 +47,8 @@ function computeScaleBar(zoom: number, latitude: number, maxBarPx: number) {
       best = d;
     }
   }
-  return { widthPx: Math.round(best / mpp), distance: best };
+  const minBarPx = maxBarPx * 0.375;
+  return { widthPx: Math.max(Math.round(best / mpp), minBarPx), distance: best };
 }
 
 function formatDistance(meters: number): string {
@@ -121,7 +122,8 @@ export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onT
   const [isOpen, setIsOpen] = useState(false);
   if (!locationName) return null;
 
-  const cardWidth = windowWidth * CARD_WIDTH_RATIO;
+  const MIN_CARD_WIDTH = 220;
+  const cardWidth = Math.max(windowWidth * CARD_WIDTH_RATIO, MIN_CARD_WIDTH);
   const barMaxWidth = (cardWidth - CARD_CHROME_PX) * 0.8;
 
   return (
