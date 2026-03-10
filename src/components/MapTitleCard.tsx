@@ -18,6 +18,8 @@ interface MapTitleCardProps {
   latitude: number;
   terraIncognita: boolean;
   onTerraIncognitaChange: (value: boolean) => void;
+  walkActive: boolean;
+  onWalkChange: (value: boolean) => void;
 }
 
 function metersPerPixel(zoom: number, latitude: number): number {
@@ -91,7 +93,7 @@ function DecorativeRule({ s }: { s: (basePx: number) => number }) {
 
 const CARD_WIDTH_RATIO = 0.1875;
 
-export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onTerraIncognitaChange }: MapTitleCardProps) {
+export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onTerraIncognitaChange, walkActive, onWalkChange }: MapTitleCardProps) {
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const s = useScaledSize();
   const [isOpen, setIsOpen] = useState(false);
@@ -203,6 +205,48 @@ export function MapTitleCard({ locationName, zoom, latitude, terraIncognita, onT
                 TERRA INCOGNITA
               </Text>
             </Pressable>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: s(8) }}>
+              <Text
+                style={{
+                  flex: 1,
+                  fontFamily: serifFont,
+                  fontSize: s(12),
+                  color: BROWN,
+                  letterSpacing: s(2),
+                }}
+              >
+                SIMULATED WALK
+              </Text>
+              {walkActive ? (
+                <Pressable
+                  style={{
+                    borderWidth: 1,
+                    borderColor: BROWN,
+                    paddingHorizontal: s(10),
+                    paddingVertical: s(4),
+                  }}
+                  onPress={() => onWalkChange(false)}
+                >
+                  <Text style={{ fontFamily: serifFont, fontSize: s(11), color: BROWN, letterSpacing: s(1) }}>
+                    STOP
+                  </Text>
+                </Pressable>
+              ) : (
+                <Pressable
+                  style={{
+                    borderWidth: 1,
+                    borderColor: BROWN,
+                    paddingHorizontal: s(10),
+                    paddingVertical: s(4),
+                  }}
+                  onPress={() => onWalkChange(true)}
+                >
+                  <Text style={{ fontFamily: serifFont, fontSize: s(11), color: BROWN, letterSpacing: s(1) }}>
+                    START
+                  </Text>
+                </Pressable>
+              )}
+            </View>
           </View>
         </View>
       )}
